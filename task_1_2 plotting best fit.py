@@ -2,13 +2,13 @@ import models
 import numpy as np
 import matplotlib.pyplot as plt
 
-t = 1000
+t = 100
 
-M = 20.738
-R = 2.397
+M = 30.129
+R = 2.434
 step_model = models.StepModel(m = M, r = R)
-sig = 0.424
-bet = 2.229
+sig = 0.269
+bet = 1.468
 ramp_model = models.RampModel(beta = bet, sigma = sig)
 
 def trial_average(model, iterations, t, N):
@@ -22,14 +22,14 @@ def trial_average(model, iterations, t, N):
     bin = np.convolve(bin, np.ones(N)/N, mode='valid')
     return bin * t
 
-bin1 = trial_average(ramp_model, 5000, t, 50)
-bin2 = trial_average(step_model, 5000, t, 50)
+bin1 = trial_average(ramp_model, 5000, t, 5)
+bin2 = trial_average(step_model, 5000, t, 5)
 spike_times = np.linspace(0, 1, num = bin1.shape[0], endpoint = False)
 
-plt.plot(spike_times, bin1)
-plt.plot(spike_times, bin2)
-#plt.title('PSTH over 2500 samples of step model  '+'m ='+str(M)+'  r='+str(R))
-#plt.title('PSTH over 100 samples of ramp model  ' + '$\\beta$=' + str(bet) + '  $\sigma$=' + str(sig))
+plt.plot(spike_times, bin1, label = 'm ='+str(M)+'  r='+str(R))
+plt.plot(spike_times, bin2, label = '$\\beta$=' + str(bet) + '  $\sigma$=' + str(sig))
+plt.legend()
+plt.title('PSTH of ramp vs step model over 5000 samples')
 plt.xlabel('time (s)   ' + 't=' + str(t))
 plt.show()
 
