@@ -46,7 +46,7 @@ dt = 1
 trans = get_transition_matrix(m, r)
 init = get_initial_distribution(m, r)
 
-for i in range(10):
+for i in range(20):
     t, s = simulate(init, trans, 100, dt)
     plt.plot(t, s, color = 'C0')
 plt.ylim(bottom = 0, top = 1)
