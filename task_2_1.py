@@ -40,8 +40,8 @@ K = 200
 dt = 1
 
 x0 = 0.5
-bet = 0.01
-sig = 0.03
+bet = 0
+sig = 0.001
 
 init = get_initial_distribution(K, x0, sig, dt)
 trans = get_transition_matrix(K, bet, sig, dt)
@@ -53,4 +53,5 @@ for i in range(10):
 plt.ylim(bottom = 0, top = 1)
 plt.xlabel('time (s)')
 plt.ylabel('firing rate')
+plt.title('$x_0$={:.1f}, $\\beta$={:.0f}, $\sigma$={:.3f}'.format(x0,bet,sig))
 plt.show()
