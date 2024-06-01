@@ -1,6 +1,6 @@
 # import
 from inference import *
-from HMM_models import *
+from HMM_models_2 import *
 import matplotlib.pyplot as plt
 
 #common parameters
@@ -18,27 +18,29 @@ m = 32
 r = 20
 
 # Replace numerical arguments with variable name
-rhmm = HMM_Ramp_Model(beta, sigma, K, x0, Rh)
-shmm = HMM_Step_Model(m, r, x0, Rh)
+rhmm = HMM_Ramp(beta, sigma, K, x0, Rh, T)
+shmm = HMM_Step(m, r, x0, Rh, T)
 
-spikes_step, xs_step, rates_step = shmm.simulate(T = T)
-spikes_ramp, xs_ramp, rates_ramp = rhmm.simulate(T = T)
+latent_ramp, rate_ramp, spike_ramp = rhmm.simulate()
+latent_step, rate_step, spike_step = shmm.simulate()
 
-#print(rates_step)
-#print(rates_ramp)
+t = np.arange(T)/T
 
-#print(shmm.lamb)
-#print(rhmm.lamb)
+ll_ramp = poisson_logpdf(spike_ramp, rhmm.lambdas)
+ll_step = poisson_logpdf(spike_step, shmm.lambdas)
 
-ll_ramp = poisson_logpdf(spikes_ramp, rhmm.lamb / T)[0]
-ll_step = poisson_logpdf(spikes_step, shmm.lamb / T)[0]
+posterior_ramp, normalizer_ramp = hmm_expected_states(rhmm.initial_distribution, rhmm.transition_matrix, ll_ramp)
+posterior_step, normalizer_step = hmm_expected_states(shmm.initial_distribution, shmm.transition_matrix, ll_step)
 
-
-posterior_ramp, normalizer_ramp = hmm_expected_states(rhmm.get_initial_distribution(1/T), rhmm.get_transition_matrix(1/T), ll_ramp)
-posterior_step, normalizer_step = hmm_expected_states(shmm.get_initial_distribution(), shmm.get_transition_matrix(), ll_step)
-
-plt.plot(np.arange(T), xs_step[0])
+plt.plot(np.arange(T), latent_step)
 plt.imshow(posterior_step.T, cmap='hot', interpolation='bilinear', origin='lower', vmin=0.0, vmax=0.3, aspect = 'auto')
+plt.xlabel('Time index ($ \Delta t = 10 ms$)')
+plt.ylabel('$s_t$')
+plt.colorbar()
+plt.show()
+
+plt.plot(np.arange(T), latent_ramp)
+plt.imshow(posterior_ramp.T, cmap='hot', interpolation='bilinear', origin='lower', vmin=0.0, vmax=0.3, aspect = 'auto')
 plt.xlabel('Time index ($ \Delta t = 10 ms$)')
 plt.ylabel('$s_t$')
 plt.colorbar()
