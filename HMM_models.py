@@ -181,18 +181,18 @@ class HMM_Ramp_Model():
 
         return y
 
-    def get_initial_distribution(self):
+    def get_initial_distribution(self, dt):
         states = np.linspace(0,1,num = self.K)
-        arr = (states - self.x0) / (self.sigma*np.sqrt(self.dt))
+        arr = (states - self.x0) / (self.sigma*np.sqrt(dt))
         dist = self.normal_dist(arr)
         dist_norm = dist / np.sum(dist)    
         return dist_norm
 
-    def get_transition_matrix(self):
+    def get_transition_matrix(self, dt):
         states = np.linspace(0,1,num = self.K)
         trans = np.empty([self.K,self.K])
         for i in range(self.K-1):
-            arr = (states - states[i] - self.beta*self.dt) / (self.sigma*np.sqrt(self.dt))
+            arr = (states - states[i] - self.beta*dt) / (self.sigma*np.sqrt(dt))
             dist = self.normal_dist(arr)
             dist_norm = dist / np.sum(dist)
             trans[i] = dist_norm
@@ -222,8 +222,8 @@ class HMM_Ramp_Model():
         xs = np.empty([Ntrials, T])
 
 
-        init_dist = self.get_initial_distribution()
-        trans_matrix = self.get_transition_matrix()
+        init_dist = self.get_initial_distribution(dt)
+        trans_matrix = self.get_transition_matrix(dt)
         states = np.arange(self.K)
 
         for n in range(Ntrials):

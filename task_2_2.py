@@ -41,7 +41,7 @@ def simulate(init_dist, trans_matrix, length, dt):
 
 m = 20
 r = 10
-dt = 1
+dt = 0.1
 
 trans = get_transition_matrix(m, r)
 init = get_initial_distribution(m, r)
