@@ -36,12 +36,12 @@ def simulate(init_dist, trans_matrix, length, dt, K):
 
 #############
 
-K = 200
-dt = 1
+K = 50
+dt = 1/100
 
-x0 = 0.5
-bet = 0
-sig = 0.001
+x0 = 0.2
+bet = 1.5
+sig = 0.3
 
 init = get_initial_distribution(K, x0, sig, dt)
 trans = get_transition_matrix(K, bet, sig, dt)
