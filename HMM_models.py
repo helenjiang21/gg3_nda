@@ -25,7 +25,6 @@ class HMM_Step():
         for i in range(self.r):
             self.initial_distribution = np.matmul(self.initial_distribution, self.transition_matrix)
 
-
         self.lambdas = np.ones(r+1) * self.x0 * self.Rh * self.dt
         self.lambdas[-1] = self.Rh * self.dt
 
