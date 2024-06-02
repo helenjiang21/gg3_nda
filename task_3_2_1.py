@@ -17,20 +17,23 @@ beta_space = np.linspace(0, 4, num=M)
 sigma_space = np.exp(np.linspace(np.log(0.4), np.log(4), num=M))
 m_space = np.linspace(0, T, num=M)
 r_space = np.arange(10) + 1
-x0_space = np.linspace(0, 0.5, num=K)
+
+ramp_priori = np.ones([len(beta_space), len(sigma_space)]) / (len(beta_space)*len(sigma_space))
+step_priori = np.ones([len(m_space), len(r_space)]) / (len(m_space)*len(r_space))
+
 
 # define parameters ramp
 beta = 2
-sigma = 0.5
+sigma = 2
 
 # define parameters step
-m = 40
+m = 60
 r = 5
 
 rhmm = HMM_Ramp(beta, sigma, K, x0, Rh, T)
 shmm = HMM_Step(m, r, x0, Rh, T)
 
-N = 10
+N = 3
 rhmm_datas = np.empty([N, T], dtype = np.int32)
 shmm_datas = np.empty([N, T], dtype = np.int32)
 for i in range(N):
@@ -46,42 +49,48 @@ def compute_likelihood(model, datas):
         likelihood += hmm_normalizer(model.initial_distribution, model.transition_matrix, ll)
     return likelihood
 
-def sweep_ramp_models(beta_space, sigma_space, datas):
+def sweep_ramp_models(beta_space, sigma_space, datas, normalize = False):
     l_matrix = np.empty([len(beta_space), len(sigma_space)])
     for i in range(len(beta_space)):
         for j in range(len(sigma_space)):
             model = HMM_Ramp(beta_space[i], sigma_space[j], K, x0, Rh, T)
             l_matrix[i][j] = compute_likelihood(model, datas)
-    return l_matrix
+    if normalize:
+        return l_matrix - np.min(l_matrix), np.min(l_matrix)
+    else:
+        return l_matrix - np.min(l_matrix)
 
-def sweep_step_models(m_space, r_space, datas):
+def sweep_step_models(m_space, r_space, datas, normalize = False):
     l_matrix = np.empty([len(m_space), len(r_space)])
     for i in range(len(m_space)):
         for j in range(len(r_space)):
             model = HMM_Step(m_space[i], r_space[j], x0, Rh, T)
             l_matrix[i][j] = compute_likelihood(model, datas)
-    return l_matrix
+    if normalize:
+        return l_matrix - np.min(l_matrix), np.min(l_matrix)
+    else:
+        return l_matrix - np.min(l_matrix)
 
-ramp_matrix = sweep_ramp_models(beta_space, sigma_space, rhmm_datas)
-max_index_flat = np.argmax(ramp_matrix)
-max_index_2d = np.unravel_index(max_index_flat, ramp_matrix.shape)
-plt.scatter(max_index_2d[1], max_index_2d[0], color='red', label='Max Value')
-norm1 = mcolors.PowerNorm(gamma=3)
-plt.imshow(ramp_matrix, cmap='hot', norm=norm1, interpolation='bilinear', origin='lower', aspect = 'auto')
-plt.xlabel('$\sigma$')
-plt.ylabel('$\\beta$')
-plt.colorbar()
-plt.title('Likelihood heatmap for $\\beta$={:.1f}, $\sigma$={:.1f}'.format(beta,sigma))
-plt.show()
+def compute_normalizer(likelihood, priori):
+    mat = np.empty_like(likelihood)
+    for i in range(likelihood.shape[0]):
+        for j in range(likelihood.shape[1]):
+            mat[i][j] = likelihood[i][j] * priori[i][j]
+    norm = np.sum(mat)
+    return norm
 
-step_matrix = sweep_step_models(m_space, r_space, shmm_datas)
-max_index_flat = np.argmax(step_matrix)
-max_index_2d = np.unravel_index(max_index_flat, step_matrix.shape)
-plt.scatter(max_index_2d[1], max_index_2d[0], color='red', label='Max Value')
-norm2 = mcolors.PowerNorm(gamma=3)
-plt.imshow(step_matrix, cmap='hot', norm=norm2, interpolation='bilinear', origin='lower', aspect = 'auto')
-plt.xlabel('$r$')
-plt.ylabel('$m$')
-plt.colorbar()
-plt.title('Likelihood heatmap for $m$={:d}, $r$={:d}'.format(m,r))
-plt.show()
+def compute_bayes_factor(datas, log = True):
+    ramp_ll, ramp_coeff = sweep_ramp_models(beta_space, sigma_space, datas, normalize = True)
+    step_ll, step_coeff = sweep_step_models(m_space, r_space, datas, normalize = True)
+    ramp_l = np.exp(ramp_ll)
+    step_l = np.exp(step_ll)
+    ramp_norm = compute_normalizer(ramp_l, ramp_priori)
+    step_norm = compute_normalizer(step_l, step_priori)
+    if log:
+        return np.log(ramp_norm / step_norm) + (ramp_coeff - step_coeff)
+    else:
+        return ramp_norm / step_norm * np.exp(ramp_coeff - step_coeff)
+    
+
+print(compute_bayes_factor(rhmm_datas))
+print(compute_bayes_factor(shmm_datas))
